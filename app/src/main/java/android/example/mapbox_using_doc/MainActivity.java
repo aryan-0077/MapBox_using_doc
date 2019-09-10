@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView = (MapView)findViewById(R.id.mapView);
         // Activities have the ability, under special circumstances, to restore themselves to a previous state
         mapView.onCreate(savedInstanceState);
+        // getMapAsync call the onMapReadyMethod
         mapView.getMapAsync(this);
     }
 
