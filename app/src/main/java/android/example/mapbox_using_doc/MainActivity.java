@@ -4,13 +4,16 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.view.View;
+import android.widget.Toast;
 
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -24,7 +27,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private MapView mapView;
     private MapboxMap mapboxMap;
+    // LocationComponent -> Get the Location
     private LocationComponent locationComponent;
+    // For Permissions
+    private PermissionsManager permissionsManager;
 
 
     @Override
@@ -46,9 +52,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    // PERMISSION WORK START FROM HERE >>>>
     @Override
     public void onPermissionResult(boolean granted) {
-
+        if(granted) {
+            enableLocationComponent(mapboxMap.getStyle());
+        }else {
+            Toast.makeText(getApplicationContext(),"Permission not Granted ",Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -57,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
+    // WHEN THE MAP IS READY >>>>>
     @Override
     public void onMapReady(@NonNull MapboxMap mapboxMap) {
             // When the map is Ready we need to display user Current Location
@@ -70,16 +82,71 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             });
 
-
-
     }
 
+    // PERMISSIONS CHECK HERE >>>>
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
         // Check If the Permissions are Enabled , if Not then Request for it
         if(PermissionsManager.areLocationPermissionsGranted(this)) {
             // Then we can Activate MapBox Location Component
             locationComponent = mapboxMap.getLocationComponent();
             locationComponent.activateLocationComponent(this,loadedMapStyle);
+            // We just Activated the Location Component now we just need to set it
+            locationComponent.setLocationComponentEnabled(true);
+
+            locationComponent.setCameraMode(CameraMode.TRACKING);
+        }else {
+            // If the Permission not Enabled then ask it ...
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+       permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+       // Then go to OnPermissionsResult .....
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mapView.onStop();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        mapView.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mapView.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mapView.onLowMemory();
     }
 }
